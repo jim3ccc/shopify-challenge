@@ -5,4 +5,5 @@ package com.example.jimchiang.shopify_challenge;
  */
 
 public class Order {
+    public String email;
 }

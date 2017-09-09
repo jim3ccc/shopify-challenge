@@ -14,6 +14,9 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOError;
 import java.io.IOException;
 import java.util.concurrent.Callable;
@@ -129,9 +132,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Request request = new Request.Builder()
                 .url("https://shopicruit.myshopify.com/admin/orders.json?page=1&access_token=c32313df0d0ef512ca64d5b336a0d7c6")
                 .build();
-        Response response = client.newCall(request).execute();
 
-        /*client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();
@@ -141,21 +143,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             public void onResponse(Call call, Response response) throws IOException {
                 try (ResponseBody responseBody = response.body()) {
                     if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-
-                    Headers responseHeaders = response.headers();
-                    for (int i = 0, size = responseHeaders.size(); i < size; i++) {
-                        System.out.println(responseHeaders.name(i) + ": " + responseHeaders.value(i));
-                    }
-
-                    System.out.println(responseBody.string());
+                    handleResponseBody(response);
                 }
             }
-        });*/
+        });
 
-        if(response.isSuccessful()){
-            Log.d(TAG, "response successful: " + response.body().string());
-            Order[] orders = new Gson().fromJson(response.body().charStream(), Order[].class);
-            return orders;
+        return null;
+    }
+
+    private Order[] handleResponseBody(Response response) {
+        try{
+            JSONObject jsonObj = new JSONObject(response.body().string());
+            System.out.println(jsonObj.getString("orders"));
+            Order[] order = new Gson().fromJson(jsonObj.getString("orders"), Order[].class);
+            return order;
+        }catch (Exception e){
+            e.printStackTrace();
         }
         return null;
     }
