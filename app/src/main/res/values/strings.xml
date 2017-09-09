@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">shopify-challenge</string>
+    <string-array name="user_choices">
+        <item>Total Amount Spent</item>
+        <item>Number Sold</item>
+    </string-array>
 </resources>
+
+
