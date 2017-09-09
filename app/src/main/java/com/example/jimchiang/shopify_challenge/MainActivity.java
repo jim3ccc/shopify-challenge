@@ -9,7 +9,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
 
 import java.io.IOError;
 import java.io.IOException;
@@ -24,9 +27,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -34,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @BindView(R.id.btn_submit) Button mSubmitButton;
     @BindView(R.id.editText) EditText mEditTextString;
     @BindView(R.id.spinner_user_choices) Spinner mSpinnerUserChoices;
+    @BindView(R.id.textView_result) TextView mTextViewResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,20 +52,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         getJSONObservable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<String>() {
+                .subscribe(new Observer<Order[]>() {
                     @Override
                     public void onSubscribe(@NonNull Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(@NonNull String s) {
-                        Log.d(TAG, "onNext: " + s);
+                    public void onNext(@NonNull Order[] orders) {
+                        StringBuilder builder = new StringBuilder();
+                        for(Order o : orders){
+                            builder.append(orders);
+                            builder.append("\n");
+                        }
+                        mTextViewResult.setText(builder.toString());
                     }
 
                     @Override
                     public void onError(@NonNull Throwable e) {
-
+                        Log.d(TAG, "onError: " + e.getMessage());
                     }
 
                     @Override
@@ -98,10 +111,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-    public Observable<String> getJSONObservable(){
-        return Observable.defer(new Callable<ObservableSource<? extends String>>() {
+    public Observable<Order[]> getJSONObservable(){
+        return Observable.defer(new Callable<ObservableSource<? extends Order[]>>() {
             @Override
-            public ObservableSource<? extends String> call() throws Exception {
+            public ObservableSource<? extends Order[]> call() throws Exception {
                 try {
                     return Observable.just(getJSON());
                 }catch (IOException e){
@@ -111,15 +124,38 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
     }
 
-    public String getJSON() throws IOException{
+    public Order[] getJSON() throws IOException{
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url("https://shopicruit.myshopify.com/admin/orders.json?page=1&access_token=c32313df0d0ef512ca64d5b336a0d7c6")
                 .build();
         Response response = client.newCall(request).execute();
 
+        /*client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+                    Headers responseHeaders = response.headers();
+                    for (int i = 0, size = responseHeaders.size(); i < size; i++) {
+                        System.out.println(responseHeaders.name(i) + ": " + responseHeaders.value(i));
+                    }
+
+                    System.out.println(responseBody.string());
+                }
+            }
+        });*/
+
         if(response.isSuccessful()){
-            return response.toString();
+            Log.d(TAG, "response successful: " + response.body().string());
+            Order[] orders = new Gson().fromJson(response.body().charStream(), Order[].class);
+            return orders;
         }
         return null;
     }
