@@ -16,6 +16,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -78,8 +80,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 //When we click submit, we get value from editText and spinner
                 String editText = mEditTextString.getText().toString();
                 String spinnerText = mSpinnerUserChoices.getSelectedItem().toString();
-                Log.d(TAG, "editText value: " + editText + " spinnerText value: " + spinnerText);
-
 
                 getJSONObservable(spinnerText, editText)
                         .subscribeOn(Schedulers.io())
@@ -92,12 +92,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                             @Override
                             public void onNext(@NonNull Order[] orders) {
-                                StringBuilder builder = new StringBuilder();
+                                /*StringBuilder builder = new StringBuilder();
                                 for(Order o : orders){
                                     builder.append(o.email);
                                     builder.append("\n");
                                 }
-                                mTextViewResult.setText(builder.toString());
+                                mTextViewResult.setText(builder.toString());*/
+
+                                for(Order o: orders){
+                                    if(o.customer != null){
+                                        System.out.println(o.customer.get("first_name"));
+                                        System.out.println(o.customer.get("last_name"));
+                                    }
+                                }
                             }
 
                             @Override
@@ -158,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         if(response.isSuccessful()){
             try{
                 JSONObject jsonObj = new JSONObject(response.body().string());
-                System.out.println(jsonObj.getString("orders"));
                 Order[] order = new Gson().fromJson(jsonObj.getString("orders"), Order[].class);
                 return order;
             }catch (Exception e){
