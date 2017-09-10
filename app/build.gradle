@@ -41,4 +41,7 @@ dependencies {
 
     //Gson
     compile 'com.google.code.gson:gson:2.8.1'
+
+    //editText Validator
+    compile ('com.andreabaccega:android-form-edittext:1.3.+')
 }
