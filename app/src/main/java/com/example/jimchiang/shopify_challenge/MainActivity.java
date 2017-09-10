@@ -1,9 +1,8 @@
 package com.example.jimchiang.shopify_challenge;
 
-import android.app.Activity;
 import android.content.Context;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -13,20 +12,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOError;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -40,13 +34,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, View.OnFocusChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -115,7 +105,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                                 if (fullNameNoSpacesLower.equals("napoleonbatz")) {
                                                     System.out.println("currency: " + o.currency);
                                                     double totalSpent = o.customer.get("total_spent").getAsDouble();
-                                                    System.out.println(totalSpent);
                                                     total += totalSpent;
                                                 }
                                             }
@@ -130,13 +119,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         int itemCount = 0;
                                         String itemNameLookedUp = mEditTextString.getText().toString();
                                         for (Order o : orders) {
-                                            for(JsonElement jsonElement : o.line_items){
+                                            for (JsonElement jsonElement : o.line_items) {
                                                 JsonObject jsonObject = jsonElement.getAsJsonObject();
-                                                System.out.println(jsonObject.get("title").getAsString());
 
                                                 String itemNameNoSpaceLower = jsonObject.get("title").getAsString().replace(" ", "").toLowerCase();
                                                 String editTextStringNoSpaceLower = itemNameLookedUp.replace(" ", "").toLowerCase();
-                                                if(itemNameNoSpaceLower.equals(editTextStringNoSpaceLower)){
+                                                if (itemNameNoSpaceLower.equals(editTextStringNoSpaceLower)) {
                                                     itemCount++;
                                                 }
                                             }
