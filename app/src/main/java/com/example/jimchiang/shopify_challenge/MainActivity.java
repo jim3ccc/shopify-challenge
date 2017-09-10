@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 imm.hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(), 0);
 
                 //When we click submit, we get value from editText and spinner
-                String editText = mEditTextString.getText().toString();
+                final String editText = mEditTextString.getText().toString();
                 final String spinnerText = mSpinnerUserChoices.getSelectedItem().toString();
 
                 getJSONObservable(spinnerText, editText)
@@ -105,13 +105,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                                 switch (spinnerTextNoSpaceLower) {
                                     case "totalamountspent":
+                                        String fullName = mEditTextString.getText().toString();
                                         double total = 0.00;
 
                                         for (Order o : orders) {
                                             if (o.customer != null) {
-                                                String firstName = o.customer.get("first_name").getAsString();
-                                                String lastName = o.customer.get("last_name").getAsString();
-                                                String fullName = firstName + " " + lastName;
                                                 String fullNameNoSpacesLower = fullName.replace(" ", "").toLowerCase();
 
                                                 if (fullNameNoSpacesLower.equals("napoleonbatz")) {
