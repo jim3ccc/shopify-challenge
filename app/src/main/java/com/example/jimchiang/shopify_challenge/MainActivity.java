@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -47,13 +48,17 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, View.OnFocusChangeListener{
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, View.OnFocusChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    @BindView(R.id.btn_submit) Button mSubmitButton;
-    @BindView(R.id.editText) EditText mEditTextString;
-    @BindView(R.id.spinner_user_choices) Spinner mSpinnerUserChoices;
-    @BindView(R.id.textView_result) TextView mTextViewResult;
+    @BindView(R.id.btn_submit)
+    Button mSubmitButton;
+    @BindView(R.id.editText)
+    EditText mEditTextString;
+    @BindView(R.id.spinner_user_choices)
+    Spinner mSpinnerUserChoices;
+    @BindView(R.id.textView_result)
+    TextView mTextViewResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,11 +84,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             public void onClick(View view) {
                 //hide softkeyboard
                 InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(),0);
+                imm.hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(), 0);
 
                 //When we click submit, we get value from editText and spinner
                 String editText = mEditTextString.getText().toString();
-                String spinnerText = mSpinnerUserChoices.getSelectedItem().toString();
+                final String spinnerText = mSpinnerUserChoices.getSelectedItem().toString();
 
                 getJSONObservable(spinnerText, editText)
                         .subscribeOn(Schedulers.io())
@@ -96,26 +101,50 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                             @Override
                             public void onNext(@NonNull Order[] orders) {
-                                double total = 0.00;
+                                String spinnerTextNoSpaceLower = spinnerText.replace(" ", "").toLowerCase();
 
-                                for(Order o: orders){
-                                    if(o.customer != null){
-                                        String firstName = o.customer.get("first_name").getAsString();
-                                        String lastName = o.customer.get("last_name").getAsString();
-                                        String fullName = firstName + " " + lastName;
-                                        String fullNameNoSpacesLower = fullName.replace(" ", "").toLowerCase();
+                                switch (spinnerTextNoSpaceLower) {
+                                    case "totalamountspent":
+                                        double total = 0.00;
 
-                                        if(fullNameNoSpacesLower.equals("napoleonbatz")) {
-                                            double totalSpent = o.customer.get("total_spent").getAsDouble();
-                                            System.out.println(totalSpent);
-                                            total += totalSpent;
+                                        for (Order o : orders) {
+                                            if (o.customer != null) {
+                                                String firstName = o.customer.get("first_name").getAsString();
+                                                String lastName = o.customer.get("last_name").getAsString();
+                                                String fullName = firstName + " " + lastName;
+                                                String fullNameNoSpacesLower = fullName.replace(" ", "").toLowerCase();
+
+                                                if (fullNameNoSpacesLower.equals("napoleonbatz")) {
+                                                    System.out.println("currency: " + o.currency);
+                                                    double totalSpent = o.customer.get("total_spent").getAsDouble();
+                                                    System.out.println(totalSpent);
+                                                    total += totalSpent;
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                                BigDecimal result2 = new BigDecimal(total).setScale(2, BigDecimal.ROUND_HALF_UP);
-                                NumberFormat form = NumberFormat.getCurrencyInstance(Locale.US);
+                                        BigDecimal result2 = new BigDecimal(total).setScale(2, BigDecimal.ROUND_HALF_UP);
+                                        NumberFormat form = NumberFormat.getCurrencyInstance(Locale.CANADA);
 
-                                mTextViewResult.setText(form.format(result2));
+                                        mTextViewResult.setText(form.format(result2));
+                                        break;
+
+                                    case "numbersold":
+                                        int itemCount = 0;
+                                        String itemNameLookedUp = mEditTextString.getText().toString();
+                                        for (Order o : orders) {
+                                            for(JsonElement jsonElement : o.line_items){
+                                                JsonObject jsonObject = jsonElement.getAsJsonObject();
+                                                System.out.println(jsonObject.get("title").getAsString());
+
+                                                String itemNameNoSpaceLower = jsonObject.get("title").getAsString().replace(" ", "").toLowerCase();
+                                                String editTextStringNoSpaceLower = itemNameLookedUp.replace(" ", "").toLowerCase();
+                                                if(itemNameNoSpaceLower.equals(editTextStringNoSpaceLower)){
+                                                    itemCount++;
+                                                }
+                                            }
+                                        }
+                                        mTextViewResult.setText(itemCount + " " + itemNameLookedUp + " sold");
+                                }
                             }
 
                             @Override
@@ -134,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        switch (i){
+        switch (i) {
             case 0:
                 mEditTextString.setHint("Full Name");
                 break;
@@ -151,20 +180,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-    public Observable<Order[]> getJSONObservable(final String spinnerText, final String editText){
+    public Observable<Order[]> getJSONObservable(final String spinnerText, final String editText) {
         return Observable.defer(new Callable<ObservableSource<? extends Order[]>>() {
             @Override
             public ObservableSource<? extends Order[]> call() throws Exception {
                 try {
                     return Observable.just(getJSON(spinnerText, editText));
-                }catch (IOException e){
+                } catch (IOException e) {
                     return null;
                 }
             }
         });
     }
 
-    public Order[] getJSON(String spinnerText, String editText) throws IOException{
+    public Order[] getJSON(String spinnerText, String editText) throws IOException {
         Log.d(TAG, "getJSON parameters: " + spinnerText + " " + editText);
 
         OkHttpClient client = new OkHttpClient();
@@ -173,12 +202,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 .build();
 
         Response response = client.newCall(request).execute();
-        if(response.isSuccessful()){
-            try{
+        if (response.isSuccessful()) {
+            try {
                 JSONObject jsonObj = new JSONObject(response.body().string());
                 Order[] order = new Gson().fromJson(jsonObj.getString("orders"), Order[].class);
                 return order;
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -187,8 +216,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onFocusChange(View view, boolean hasFocus) {
-        if(view.getId() == R.id.editText && !hasFocus){
-            InputMethodManager imm =  (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (view.getId() == R.id.editText && !hasFocus) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
