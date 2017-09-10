@@ -99,12 +99,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         double total = 0.00;
 
                                         for (Order o : orders) {
-                                            if (o.customer != null) {
+                                            if (o.total_price != null && o.customer != null) {
                                                 String fullNameNoSpacesLower = fullName.replace(" ", "").toLowerCase();
+                                                String fullNameFromJSONNoSpacesLower =
+                                                        (o.customer.get("first_name").getAsString() + o.customer.get("last_name").getAsString()).replace(" ", "").toLowerCase();
 
-                                                if (fullNameNoSpacesLower.equals("napoleonbatz")) {
+                                                if (fullNameFromJSONNoSpacesLower.equals(fullNameNoSpacesLower)) {
                                                     System.out.println("currency: " + o.currency);
-                                                    double totalSpent = o.customer.get("total_spent").getAsDouble();
+                                                    double totalSpent = Double.valueOf(o.total_price);
+                                                    System.out.println(o.total_price);
                                                     total += totalSpent;
                                                 }
                                             }
