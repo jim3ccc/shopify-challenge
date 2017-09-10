@@ -24,6 +24,10 @@ import org.json.JSONObject;
 
 import java.io.IOError;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 
 import butterknife.BindView;
@@ -92,19 +96,26 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                             @Override
                             public void onNext(@NonNull Order[] orders) {
-                                /*StringBuilder builder = new StringBuilder();
-                                for(Order o : orders){
-                                    builder.append(o.email);
-                                    builder.append("\n");
-                                }
-                                mTextViewResult.setText(builder.toString());*/
+                                double total = 0.00;
 
                                 for(Order o: orders){
                                     if(o.customer != null){
-                                        System.out.println(o.customer.get("first_name"));
-                                        System.out.println(o.customer.get("last_name"));
+                                        String firstName = o.customer.get("first_name").getAsString();
+                                        String lastName = o.customer.get("last_name").getAsString();
+                                        String fullName = firstName + " " + lastName;
+                                        String fullNameNoSpacesLower = fullName.replace(" ", "").toLowerCase();
+
+                                        if(fullNameNoSpacesLower.equals("napoleonbatz")) {
+                                            double totalSpent = o.customer.get("total_spent").getAsDouble();
+                                            System.out.println(totalSpent);
+                                            total += totalSpent;
+                                        }
                                     }
                                 }
+                                BigDecimal result2 = new BigDecimal(total).setScale(2, BigDecimal.ROUND_HALF_UP);
+                                NumberFormat form = NumberFormat.getCurrencyInstance(Locale.US);
+
+                                mTextViewResult.setText(form.format(result2));
                             }
 
                             @Override
